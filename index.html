@@ -18,7 +18,7 @@
             --shadow-card: 0 10px 25px rgba(0,0,0,0.08);
             --success: #28a745;
             --discount-red: #e74c3c;
-            --season-color: #5d6d7e; /* Season Text Color */
+            --season-color: #5d6d7e;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -85,6 +85,31 @@
         @keyframes expandLine { 0% { width: 0; opacity: 0; } 50% { opacity: 1; } 100% { width: 80%; opacity: 1; } }
         @keyframes curtainExit { to { transform: translateY(-100%); opacity: 0; pointer-events: none; } }
 
+        /* --- PROMO POPUP STYLES --- */
+        #promo-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 4500;
+            display: none; justify-content: center; align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+        .promo-content {
+            background: white; width: 85%; max-width: 350px;
+            border-radius: 15px; padding: 20px; position: relative;
+            text-align: center; box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+            border: 2px solid var(--primary);
+        }
+        .promo-close {
+            position: absolute; top: -15px; right: -15px;
+            background: var(--secondary); color: white;
+            width: 35px; height: 35px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; border: 2px solid var(--white);
+            font-weight: bold; font-size: 1.2rem;
+        }
+        .promo-img { width: 100%; border-radius: 10px; margin-bottom: 10px; object-fit: cover; max-height: 250px; display: none; }
+        .promo-text { color: var(--secondary); font-size: 1rem; margin-bottom: 10px; font-weight: 600; display: none; }
+
+
         /* --- COMPONENTS --- */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -107,6 +132,20 @@
         }
         .header h2 { color: var(--secondary); font-weight: 700; font-size: 1.4rem; }
 
+        /* GENDER FILTER BUTTONS */
+        .gender-filter-container {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 15px;
+        }
+        .gender-btn {
+            background: white; border: 1px solid #ccc; padding: 8px 15px;
+            border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+            transition: 0.3s; color: #555;
+        }
+        .gender-btn.active {
+            background: var(--secondary); color: var(--primary); border-color: var(--secondary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
         /* Product Grid */
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 20px; }
         .product-card { 
@@ -117,17 +156,23 @@
         .p-img-container { width: 100%; height: 190px; background: #eee; overflow: hidden; position: relative; }
         .p-img-container img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Discount Badge on Grid */
+        /* Discount & Gender Badge */
         .discount-badge {
             position: absolute; top: 10px; right: 10px;
             background: var(--discount-red); color: white;
             padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;
             z-index: 2;
         }
+        .gender-tag-card {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(0,0,0,0.6); color: white;
+            padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 500;
+            z-index: 2; text-transform: uppercase;
+        }
 
         .p-details { padding: 12px; }
         .p-name { font-weight: 600; color: #333; margin-bottom: 2px; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        /* NEW: Season Style */
+        
         .p-season { font-size: 0.7rem; color: var(--season-color); margin-bottom: 5px; font-style: italic; display: flex; align-items: center; gap: 4px;}
         
         .p-price-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -202,7 +247,6 @@
         .pd-price-side { width: 35%; text-align: right; }
         .pd-title { font-size: 1.3rem; color: var(--secondary); line-height: 1.2; margin-bottom: 5px; }
         
-        /* Share Button Style */
         .share-btn-icon {
             font-size: 1.2rem; color: var(--primary); 
             cursor: pointer; padding: 5px; transition: transform 0.2s;
@@ -251,67 +295,53 @@
         .nav-item { text-align: center; color: #ccc; cursor: pointer; }
         .nav-item.active { color: var(--secondary); }
 
-        /* --- SEARCH SCREEN STYLES (UPDATED) --- */
+        /* --- SEARCH SCREEN STYLES --- */
         .search-mode-container {
-            display: flex;
-            background: #fff;
-            padding: 5px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            gap: 5px;
+            display: flex; background: #fff; padding: 5px; border-radius: 10px;
+            margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); gap: 5px;
         }
-
         .mode-btn {
-            flex: 1;
-            padding: 10px 5px; /* Compact padding */
-            border: none;
-            background: transparent;
-            color: #777;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 0.85rem;
+            flex: 1; padding: 10px 5px; border: none; background: transparent;
+            color: #777; border-radius: 8px; font-weight: 600; cursor: pointer;
+            transition: 0.3s; font-size: 0.85rem;
             display: flex; flex-direction: column; align-items: center; gap: 3px;
         }
-
         .mode-btn i { font-size: 1rem; }
-
-        .mode-btn.active {
-            background: var(--secondary);
-            color: var(--primary);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        .category-scroll {
-            display: flex;
-            flex-wrap: wrap; 
-            gap: 10px;
-            padding: 10px 0;
-            justify-content: center;
-        }
-
+        .mode-btn.active { background: var(--secondary); color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .category-scroll { display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 0; justify-content: center; }
         .cat-btn {
-            background: white;
-            border: 1px solid #ddd;
-            padding: 10px 20px;
-            border-radius: 20px;
-            white-space: nowrap;
-            font-size: 0.9rem;
-            color: #555;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            text-align: center;
+            background: white; border: 1px solid #ddd; padding: 10px 20px;
+            border-radius: 20px; white-space: nowrap; font-size: 0.9rem;
+            color: #555; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center;
         }
+        .cat-btn.active { background: var(--secondary); color: var(--primary); border-color: var(--secondary); font-weight: 600; }
 
-        .cat-btn.active {
-            background: var(--secondary);
-            color: var(--primary);
-            border-color: var(--secondary);
-            font-weight: 600;
+        /* CAMPAIGN & DISCOUNT CSS */
+        .campaign-list-item {
+            background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 5px solid #eee;
         }
+        .rank-1 { border-left-color: #FFD700; background: #fffbe6; } /* Gold */
+        .rank-2 { border-left-color: #C0C0C0; } /* Silver */
+        .rank-3 { border-left-color: #CD7F32; } /* Bronze */
+        
+        .rank-badge {
+            width: 30px; height: 30px; border-radius: 50%; background: #333; color: white;
+            display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 10px;
+        }
+        .rank-1 .rank-badge { background: #FFD700; color: #333; }
+        
+        .discount-active-banner {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white; padding: 15px; border-radius: 10px;
+            margin-bottom: 20px; text-align: center;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
 
     </style>
 </head>
@@ -321,6 +351,15 @@
 <div id="zoom-modal" onclick="this.style.display='none'">
     <span class="zoom-close">&times;</span>
     <img id="zoom-img" src="">
+</div>
+
+<!-- PROMO POPUP -->
+<div id="promo-modal">
+    <div class="promo-content">
+        <div class="promo-close" onclick="document.getElementById('promo-modal').style.display='none'">&times;</div>
+        <img id="promo-img" class="promo-img" src="">
+        <h3 id="promo-text" class="promo-text"></h3>
+    </div>
 </div>
 
 <!-- INTRO ANIMATION LAYER -->
@@ -376,14 +415,20 @@
                 <h1 id="banner-title" style="font-size:2rem; line-height:1.1; font-family:'Playfair Display', serif;">Royal<br>Arrivals</h1>
             </div>
         </div>
+
+        <!-- GENDER FILTERS -->
+        <div class="gender-filter-container">
+            <button class="gender-btn active" id="btn-gen-all" onclick="window.app.filterGender('all')">All</button>
+            <button class="gender-btn" id="btn-gen-men" onclick="window.app.filterGender('Men')"><i class="fas fa-male"></i> Men</button>
+            <button class="gender-btn" id="btn-gen-women" onclick="window.app.filterGender('Women')"><i class="fas fa-female"></i> Women</button>
+        </div>
+
         <div id="product-grid" class="product-grid"></div>
     </div>
 
-    <!-- 2. SEARCH SCREEN (REVISED with Code Search) -->
+    <!-- 2. SEARCH SCREEN -->
     <div id="search-screen" class="screen">
         <div style="position: sticky; top:0; background:var(--bg-color); z-index:10; padding-bottom:5px;">
-            
-            <!-- Three Main Buttons -->
             <div class="search-mode-container">
                 <button id="btn-mode-name" class="mode-btn active" onclick="window.app.toggleSearchMode('name')">
                     <i class="fas fa-list"></i> প্রোডাক্ট লিস্ট
@@ -395,30 +440,18 @@
                     <i class="fas fa-cloud-sun-rain"></i> সিজন
                 </button>
             </div>
-
-            <!-- UNIVERSAL SEARCH BAR -->
             <div id="search-input-container">
-                <!-- UPDATED PLACEHOLDER -->
                 <input type="text" id="search-input" class="form-control" placeholder="নাম, ক্যাটাগরি বা কোড (ID) লিখুন..." onkeyup="window.app.searchProduct(this.value)">
             </div>
-            
-            <!-- Category Buttons Container -->
             <div id="category-container" style="display:none; animation:fadeIn 0.3s;">
                 <p style="text-align:center; font-size:0.8rem; color:#888; margin-top:5px;">পছন্দের ক্যাটাগরি সিলেক্ট করুন</p>
-                <div id="category-filters" class="category-scroll">
-                    <!-- Buttons will be generated here -->
-                </div>
+                <div id="category-filters" class="category-scroll"></div>
             </div>
-
-            <!-- Season Buttons Container -->
             <div id="season-container" style="display:none; animation:fadeIn 0.3s;">
                 <p style="text-align:center; font-size:0.8rem; color:#888; margin-top:5px;">পছন্দের সিজন সিলেক্ট করুন</p>
-                <div id="season-filters" class="category-scroll">
-                    <!-- Season Buttons will be generated here -->
-                </div>
+                <div id="season-filters" class="category-scroll"></div>
             </div>
         </div>
-        
         <div id="search-results" class="product-grid" style="margin-top:10px;"></div>
     </div>
 
@@ -431,6 +464,16 @@
             <h3 id="user-name">Guest User</h3>
         </div>
         <div style="background:white; border-radius:15px; overflow:hidden; box-shadow:var(--shadow-card);">
+            <!-- NEW CAMPAIGN BUTTON -->
+            <div onclick="window.app.openCampaign()" style="padding:20px; border-bottom:1px solid #eee; display:flex; align-items:center; cursor:pointer;">
+                <i class="fas fa-trophy" style="width:30px; color:#FFD700;"></i> Campaign (Top Buyers)
+            </div>
+            <!-- NEW DISCOUNT BUTTON -->
+            <div id="btn-discount-feature" onclick="window.app.activateDiscount()" style="padding:20px; border-bottom:1px solid #eee; display:flex; align-items:center; cursor:pointer; background:#f9f9f9; opacity:0.6; pointer-events:none;">
+                <i class="fas fa-percentage" style="width:30px; color:#e74c3c;"></i> Claim 50% Discount
+                <small id="discount-status" style="margin-left:auto; font-size:0.7rem; color:#888;">(Need 5k Spent)</small>
+            </div>
+
             <div onclick="window.app.openOrders()" style="padding:20px; border-bottom:1px solid #eee; display:flex; align-items:center; cursor:pointer;">
                 <i class="fas fa-box" style="width:30px; color:var(--primary);"></i> My Orders
             </div>
@@ -440,6 +483,19 @@
             <div onclick="document.getElementById('contact-modal').style.display='flex'" style="padding:20px; display:flex; align-items:center; cursor:pointer;">
                 <i class="fas fa-headset" style="width:30px; color:var(--primary);"></i> Help Center
             </div>
+        </div>
+    </div>
+
+    <!-- NEW SCREEN: CAMPAIGN LEADERBOARD -->
+    <div id="campaign-screen" class="screen">
+        <div onclick="window.app.navTo('profile-screen')" style="margin-bottom:20px; cursor:pointer;"><i class="fas fa-arrow-left"></i> Back</div>
+        <div style="text-align:center; margin-bottom:20px;">
+            <i class="fas fa-crown" style="font-size:3rem; color:#FFD700; margin-bottom:10px;"></i>
+            <h2>Top Buyers</h2>
+            <p style="color:#777;">Customers with highest purchase amount</p>
+        </div>
+        <div id="campaign-list">
+            <div style="text-align:center;"><div class="spinner"></div></div>
         </div>
     </div>
 
@@ -463,7 +519,7 @@
             <div class="pd-title-side">
                 <h2 id="pd-title" class="pd-title">Product Name</h2>
                 <div id="pd-season-tag" style="font-size:0.9rem; color:#666; font-style:italic; margin-bottom:5px;"></div>
-                <!-- SHARE BUTTON -->
+                <div id="pd-gender-tag" style="font-size:0.8rem; background:var(--secondary); color:white; display:inline-block; padding:2px 8px; border-radius:4px;"></div>
                 <i onclick="window.app.shareCurrentProduct()" class="fas fa-share-alt share-btn-icon" title="Share Product"></i>
             </div>
             <div class="pd-price-side">
@@ -492,6 +548,10 @@
     <div id="checkout-screen" class="screen">
         <div onclick="window.app.navTo('product-details-screen')" style="margin-bottom:20px; cursor:pointer;"><i class="fas fa-arrow-left"></i> Checkout Details</div>
         
+        <div id="discount-active-msg" class="discount-active-banner" style="display:none;">
+            <i class="fas fa-check-circle"></i> 50% Loyalty Discount Applied!
+        </div>
+
         <div style="background:#fffbe6; padding:15px; border-radius:10px; margin-bottom:15px; border:1px dashed #d4af37;">
             <span style="font-size:0.8rem; font-weight:600;">Referral Code (Optional)</span>
             <input type="text" id="co-ref" class="form-control" placeholder="Enter Ref Code" style="margin-bottom:0; margin-top:5px;">
@@ -528,6 +588,7 @@
             <div style="background:#e8f0fe; padding:10px; border-radius:8px; border:1px solid #b3d7ff; margin-bottom:10px;">
                 <p style="font-size:0.85rem; color:#004085; margin-bottom:5px;">Send Money (Personal) to:</p>
                 <b style="font-size:1.2rem; color:#0056b3;">01338747464</b>
+                <p id="pay-amount-hint" style="color:#d4af37; font-weight:bold; margin-top:5px;">Amount: ৳0</p>
             </div>
             <input type="text" id="co-trx" class="form-control" placeholder="Enter Transaction ID" style="border:2px solid var(--primary);">
         </div>
@@ -626,13 +687,14 @@
 <script>
     // --- FIREBASE CONFIG ---
     const firebaseConfig = {
-        apiKey: "AIzaSyB-3JLfOb3aAz_eFu6Ko98ogaupUdq1SO4",
-        authDomain: "world123123-975b6.firebaseapp.com",
-        databaseURL: "https://world123123-975b6-default-rtdb.firebaseio.com",
-        projectId: "world123123-975b6",
-        storageBucket: "world123123-975b6.firebasestorage.app",
-        messagingSenderId: "527799677210",
-        appId: "1:527799677210:web:651dfbfa367e6f31b1bca3"
+        apiKey: "AIzaSyDhdr92wBIWGowF4_YQuZJ1NcHAJO7gkBE",
+        authDomain: "e-comarce-9ec9f.firebaseapp.com",
+        databaseURL: "https://e-comarce-9ec9f-default-rtdb.firebaseio.com",
+        projectId: "e-comarce-9ec9f",
+        storageBucket: "e-comarce-9ec9f.firebasestorage.app",
+        messagingSenderId: "429520181562",
+        appId: "1:429520181562:web:c0660534faf74294ee1803",
+        measurementId: "G-MKK5GK1TDP"
     };
 
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
@@ -646,6 +708,8 @@
     window.isDropshippingMode = false;
     window.pendingOrder = null;
     window.currentDsBalance = 0; 
+    window.activeGender = 'all'; 
+    window.isDiscountActive = false; // Track 50% discount mode
 
     // --- APP LOGIC ---
     window.app = {
@@ -656,6 +720,9 @@
             if(navEl) {
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
                 navEl.classList.add('active');
+            }
+            if(id === 'profile-screen') {
+                window.app.checkDiscountEligibility();
             }
         },
 
@@ -677,6 +744,112 @@
                 const uNameEl = document.getElementById('user-name');
                 if(uNameEl) uNameEl.innerText = "Guest User";
             }
+        },
+
+        // --- NEW FEATURE: CHECK DISCOUNT ELIGIBILITY ---
+        checkDiscountEligibility: () => {
+            const phone = localStorage.getItem('rp_user_phone');
+            const btn = document.getElementById('btn-discount-feature');
+            const status = document.getElementById('discount-status');
+            
+            if(!phone) {
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+                return;
+            }
+
+            db.ref('orders').orderByChild('customerPhone').equalTo(phone).once('value', s => {
+                let totalSpent = 0;
+                if(s.exists()) {
+                    s.forEach(o => {
+                        const ord = o.val();
+                        if(ord.status === 'completed') {
+                            totalSpent += parseFloat(ord.price);
+                        }
+                    });
+                }
+                
+                if(totalSpent >= 5000) {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.background = '#d4edda'; // Light green
+                    btn.style.border = '1px solid green';
+                    status.innerHTML = '<b style="color:green">AVAILABLE</b>';
+                } else {
+                    btn.style.opacity = '0.6';
+                    btn.style.pointerEvents = 'none';
+                    btn.style.background = '#f9f9f9';
+                    btn.style.border = 'none';
+                    status.innerHTML = `(Spent: ৳${totalSpent}/5000)`;
+                }
+            });
+        },
+
+        // --- NEW FEATURE: ACTIVATE DISCOUNT ---
+        activateDiscount: () => {
+            window.isDiscountActive = true;
+            alert("Congratulations! 50% Discount Mode Activated for your next purchase.");
+            window.app.navTo('home-screen');
+        },
+
+        // --- NEW FEATURE: CAMPAIGN LEADERBOARD ---
+        openCampaign: () => {
+            window.app.navTo('campaign-screen');
+            const list = document.getElementById('campaign-list');
+            list.innerHTML = '<div style="text-align:center;"><div class="spinner"></div></div>';
+
+            db.ref('orders').once('value', snapshot => {
+                const data = snapshot.val();
+                if(!data) {
+                    list.innerHTML = '<p style="text-align:center;">No Data Available</p>';
+                    return;
+                }
+
+                // Aggregate Data
+                let userTotals = {};
+                Object.values(data).forEach(o => {
+                    if(o.status === 'completed') { // Only count completed orders
+                        if(!userTotals[o.customerPhone]) {
+                            userTotals[o.customerPhone] = {
+                                name: o.customerName || 'Unknown',
+                                phone: o.customerPhone,
+                                amount: 0
+                            };
+                        }
+                        userTotals[o.customerPhone].amount += parseFloat(o.price);
+                    }
+                });
+
+                // Convert to Array and Sort
+                let leaderboard = Object.values(userTotals).sort((a, b) => b.amount - a.amount);
+
+                // Render
+                list.innerHTML = '';
+                if(leaderboard.length === 0) {
+                    list.innerHTML = '<p style="text-align:center; margin-top:20px;">No completed orders yet.</p>';
+                    return;
+                }
+
+                leaderboard.forEach((u, index) => {
+                    let rankClass = '';
+                    if(index === 0) rankClass = 'rank-1';
+                    else if(index === 1) rankClass = 'rank-2';
+                    else if(index === 2) rankClass = 'rank-3';
+
+                    const html = `
+                    <div class="campaign-list-item ${rankClass}">
+                        <div style="display:flex; align-items:center;">
+                            <div class="rank-badge">${index + 1}</div>
+                            <div>
+                                <div style="font-weight:700; color:#333;">${u.name}</div>
+                                <div style="font-size:0.8rem; color:#777;">${u.phone.substring(0,5)}***</div>
+                            </div>
+                        </div>
+                        <div style="font-weight:700; color:var(--primary);">৳${u.amount}</div>
+                    </div>`;
+                    list.insertAdjacentHTML('beforeend', html);
+                });
+            });
         },
 
         selectPayment: (method, el) => {
@@ -703,6 +876,33 @@
             });
         },
 
+        checkPromo: () => {
+            db.ref('settings/promo').once('value', snapshot => {
+                const data = snapshot.val();
+                if(data && (data.image || data.text)) {
+                    const modal = document.getElementById('promo-modal');
+                    const img = document.getElementById('promo-img');
+                    const txt = document.getElementById('promo-text');
+                    
+                    if(data.image) {
+                        img.src = data.image;
+                        img.style.display = 'block';
+                    } else {
+                        img.style.display = 'none';
+                    }
+
+                    if(data.text) {
+                        txt.innerText = data.text;
+                        txt.style.display = 'block';
+                    } else {
+                        txt.style.display = 'none';
+                    }
+                    
+                    modal.style.display = 'flex';
+                }
+            });
+        },
+
         fetchProducts: () => {
             db.ref('products').once('value', snapshot => {
                 const data = snapshot.val();
@@ -716,14 +916,13 @@
                     });
                     
                     window.products.reverse();
-                    window.products.forEach(p => window.app.renderCard(p, grid));
+                    
+                    window.app.filterGender('all'); 
                     window.ds.renderDSGrid();
 
-                    // Generate Categories and Seasons
                     window.app.generateCategories();
                     window.app.generateSeasons();
 
-                    // CHECK DEEP LINK
                     const urlParams = new URLSearchParams(window.location.search);
                     const sharedPid = urlParams.get('pid');
                     
@@ -744,7 +943,34 @@
             });
         },
 
-        // --- UPDATED SEARCH LOGIC WITH SEASON & CODE ---
+        filterGender: (type) => {
+            window.activeGender = type;
+            
+            document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+            if(type === 'Men') document.getElementById('btn-gen-men').classList.add('active');
+            else if(type === 'Women') document.getElementById('btn-gen-women').classList.add('active');
+            else document.getElementById('btn-gen-all').classList.add('active');
+
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+
+            let filtered = window.products;
+
+            if (type !== 'all') {
+                filtered = window.products.filter(p => {
+                    if (!p.gender) return false;
+                    const productGenders = p.gender.toLowerCase().split(',').map(g => g.trim());
+                    return productGenders.includes(type.toLowerCase());
+                });
+            }
+
+            if(filtered.length > 0) {
+                filtered.forEach(p => window.app.renderCard(p, grid));
+            } else {
+                grid.innerHTML = '<p style="grid-column:span 2; text-align:center; padding:20px; color:#888;">No products found for ' + type + '</p>';
+            }
+        },
+
         toggleSearchMode: (mode) => {
             const btnName = document.getElementById('btn-mode-name');
             const btnCat = document.getElementById('btn-mode-cat');
@@ -757,51 +983,38 @@
             const grid = document.getElementById('search-results');
             const input = document.getElementById('search-input');
 
-            // Reset Result Grid
             grid.innerHTML = '';
 
-            // Reset Buttons
             btnName.classList.remove('active');
             btnCat.classList.remove('active');
             btnSeason.classList.remove('active');
 
             if (mode === 'name') {
-                // NAME LIST MODE
                 btnName.classList.add('active');
-                
                 catCont.style.display = 'none';
                 seasonCont.style.display = 'none';
                 inputCont.style.display = 'block';
-
                 input.value = '';
                 input.placeholder = "নাম, ক্যাটাগরি বা কোড (ID) লিখুন...";
-                
                 window.products.forEach(p => window.app.renderCard(p, grid));
 
             } else if (mode === 'category') {
-                // CATEGORY MODE
                 btnCat.classList.add('active');
-                
                 catCont.style.display = 'block';
                 seasonCont.style.display = 'none';
                 inputCont.style.display = 'block';
-
                 input.value = '';
                 input.placeholder = "ক্যাটাগরি খুঁজুন..."; 
-                
                 if(document.getElementById('category-filters').innerHTML === '') {
                     window.app.generateCategories();
                 }
                 grid.innerHTML = '<p style="text-align:center; width:200%; color:#888; margin-top:20px;">উপরের থেকে একটি ক্যাটাগরি বেছে নিন</p>';
             
             } else if (mode === 'season') {
-                // SEASON MODE
                 btnSeason.classList.add('active');
-                
                 catCont.style.display = 'none';
                 seasonCont.style.display = 'block';
-                inputCont.style.display = 'none'; // Hide text input for season mode if we just want buttons
-
+                inputCont.style.display = 'none'; 
                 if(document.getElementById('season-filters').innerHTML === '') {
                     window.app.generateSeasons();
                 }
@@ -812,21 +1025,15 @@
         generateCategories: () => {
             const catContainer = document.getElementById('category-filters');
             if(!catContainer) return;
-            
             let allTags = new Set();
             allTags.add('All');
-
             window.products.forEach(p => {
                 if(p.category) {
                     let tags = p.category.split(',').map(t => t.trim());
-                    tags.forEach(t => {
-                         if(t) allTags.add(t);
-                    });
+                    tags.forEach(t => { if(t) allTags.add(t); });
                 }
             });
-
             catContainer.innerHTML = '';
-            
             allTags.forEach(tag => {
                 const btn = document.createElement('button');
                 btn.className = 'cat-btn';
@@ -839,23 +1046,18 @@
         generateSeasons: () => {
             const seasonContainer = document.getElementById('season-filters');
             if(!seasonContainer) return;
-            
             let allSeasons = new Set();
-            
             window.products.forEach(p => {
                 if(p.season) {
                     let sTags = p.season.split(',').map(t => t.trim());
                     sTags.forEach(t => { if(t) allSeasons.add(t); });
                 }
             });
-
             seasonContainer.innerHTML = '';
-
             if(allSeasons.size === 0) {
                 seasonContainer.innerHTML = '<small>No seasons found</small>';
                 return;
             }
-
             allSeasons.forEach(season => {
                 const btn = document.createElement('button');
                 btn.className = 'cat-btn';
@@ -868,21 +1070,16 @@
         filterByCategory: (tag, btnElement) => {
             document.querySelectorAll('#category-filters .cat-btn').forEach(b => b.classList.remove('active'));
             if(btnElement) btnElement.classList.add('active');
-
             const grid = document.getElementById('search-results');
             grid.innerHTML = '';
             const input = document.getElementById('search-input');
             input.value = tag === 'All' ? '' : tag;
-
             let results = [];
             if(tag === 'All') {
                 results = window.products;
             } else {
-                results = window.products.filter(p => 
-                    p.category && p.category.toLowerCase().includes(tag.toLowerCase())
-                );
+                results = window.products.filter(p => p.category && p.category.toLowerCase().includes(tag.toLowerCase()));
             }
-            
             if(results.length > 0) {
                 results.forEach(p => window.app.renderCard(p, grid));
             } else {
@@ -893,14 +1090,9 @@
         filterBySeason: (season, btnElement) => {
             document.querySelectorAll('#season-filters .cat-btn').forEach(b => b.classList.remove('active'));
             if(btnElement) btnElement.classList.add('active');
-
             const grid = document.getElementById('search-results');
             grid.innerHTML = '';
-
-            let results = window.products.filter(p => 
-                p.season && p.season.toLowerCase().includes(season.toLowerCase())
-            );
-            
+            let results = window.products.filter(p => p.season && p.season.toLowerCase().includes(season.toLowerCase()));
             if(results.length > 0) {
                 results.forEach(p => window.app.renderCard(p, grid));
             } else {
@@ -922,16 +1114,11 @@
             const term = q.toLowerCase();
             
             const res = window.products.filter(p => {
-                // Name Match
                 const nameMatch = p.name.toLowerCase().includes(term);
-                // Category Match
                 const catMatch = p.category && p.category.toLowerCase().includes(term);
-                // Season Match
                 const seasonMatch = p.season && p.season.toLowerCase().includes(term);
-                // ID / Code Match (NEW ADDITION)
                 const idMatch = p.id && String(p.id).toLowerCase().includes(term);
                 const codeMatch = p.code && String(p.code).toLowerCase().includes(term);
-
                 return nameMatch || catMatch || seasonMatch || idMatch || codeMatch;
             });
 
@@ -947,10 +1134,14 @@
             let priceHtml = `<div class="p-price">৳${p.price}</div>`;
             let discountHtml = '';
             
-            // Season Tag Logic
             let seasonHtml = '';
             if(p.season) {
                 seasonHtml = `<div class="p-season"><i class="fas fa-snowflake" style="font-size:0.7rem;"></i> ${p.season}</div>`;
+            }
+
+            let genderHtml = '';
+            if(p.gender) {
+                genderHtml = `<div class="gender-tag-card">${p.gender}</div>`;
             }
 
             if(p.oldPrice && parseFloat(p.oldPrice) > parseFloat(p.price)) {
@@ -968,6 +1159,7 @@
             const html = `
             <div class="product-card" onclick="window.app.openProduct('${p.id}')">
                 ${discountHtml}
+                ${genderHtml}
                 <div class="p-img-container"><img src="${img}"></div>
                 <div class="p-details">
                     <div class="p-name">${p.name}</div>
@@ -1007,11 +1199,17 @@
             document.getElementById('pd-title').innerText = p.name;
             document.getElementById('pd-desc').innerText = p.description || '';
             
-            // Update Season in Product Details
             if(p.season) {
                 document.getElementById('pd-season-tag').innerHTML = `Season: ${p.season}`;
             } else {
                 document.getElementById('pd-season-tag').innerHTML = '';
+            }
+
+            if(p.gender) {
+                document.getElementById('pd-gender-tag').innerText = p.gender;
+                document.getElementById('pd-gender-tag').style.display = 'inline-block';
+            } else {
+                document.getElementById('pd-gender-tag').style.display = 'none';
             }
 
             const elPrice = document.getElementById('pd-price');
@@ -1119,6 +1317,17 @@
         startCheckout: () => {
             if(!window.selectedSize || !window.selectedColor) return alert("Please select Size & Color");
             window.app.checkUserSession();
+
+            // Discount UI Update in Checkout
+            if(window.isDiscountActive) {
+                document.getElementById('discount-active-msg').style.display = 'flex';
+                let discountedPrice = parseFloat(window.currentProduct.price) / 2;
+                document.getElementById('pay-amount-hint').innerText = `Payable: ৳${discountedPrice}`;
+            } else {
+                document.getElementById('discount-active-msg').style.display = 'none';
+                document.getElementById('pay-amount-hint').innerText = `Payable: ৳${window.currentProduct.price}`;
+            }
+
             window.app.navTo('checkout-screen');
         },
 
@@ -1137,10 +1346,22 @@
                 if(!trx || trx.trim() === '') return alert("Please enter Transaction ID for " + method.toUpperCase());
             }
 
+            // APPLY DISCOUNT LOGIC
+            let finalPrice = parseFloat(window.currentProduct.price);
+            let discountNote = "";
+            let isDiscountOrder = false;
+
+            if(window.isDiscountActive) {
+                finalPrice = finalPrice / 2;
+                discountNote = "(50% Loyalty Discount Applied)";
+                isDiscountOrder = true;
+            }
+
             window.pendingOrder = {
                 product: window.currentProduct.name,
                 productId: window.currentProduct.id,
-                price: window.currentProduct.price,
+                price: finalPrice, // Save discounted price
+                originalPrice: window.currentProduct.price,
                 size: window.selectedSize,
                 color: window.selectedColor,
                 customerName: name,
@@ -1152,14 +1373,16 @@
                 date: new Date().toISOString(),
                 refCodeUsed: refCode ? refCode.trim() : null,
                 dropshipperPhone: window.isDropshippingMode ? localStorage.getItem('ds_phone') : null,
-                isDropshipOrder: window.isDropshippingMode
+                isDropshipOrder: window.isDropshippingMode,
+                isDiscounted: isDiscountOrder,
+                adminNote: isDiscountOrder ? "LOYALTY DISCOUNT USED" : ""
             };
 
             const invoiceHTML = `
                 <div class="inv-row"><span class="inv-label">Product:</span><span class="inv-val">${window.pendingOrder.product}</span></div>
                 <div class="inv-row"><span class="inv-label">Size:</span><span class="inv-val">${window.pendingOrder.size}</span></div>
                 <div class="inv-row"><span class="inv-label">Color:</span><span class="inv-val">${window.pendingOrder.color}</span></div>
-                <div class="inv-row"><span class="inv-label">Price:</span><span class="inv-val">৳${window.pendingOrder.price}</span></div>
+                <div class="inv-row"><span class="inv-label">Price:</span><span class="inv-val">৳${window.pendingOrder.price} <small style="color:red">${discountNote}</small></span></div>
                 <div style="height:10px;"></div>
                 <div class="inv-row"><span class="inv-label">Name:</span><span class="inv-val">${window.pendingOrder.customerName}</span></div>
                 <div class="inv-row"><span class="inv-label">Phone:</span><span class="inv-val">${window.pendingOrder.customerPhone}</span></div>
@@ -1197,7 +1420,10 @@
             db.ref('orders').push(window.pendingOrder).then(() => {
                 document.getElementById('loader').style.display = 'none';
                 window.app.playSuccessAnim(window.pendingOrder.customerName);
+                
+                // Reset states
                 window.isDropshippingMode = false;
+                window.isDiscountActive = false; // Reset Discount
                 window.pendingOrder = null;
             }).catch(e => {
                 document.getElementById('loader').style.display = 'none';
@@ -1218,11 +1444,9 @@
                 const span = document.createElement('span');
                 span.innerText = char === ' ' ? '\u00A0' : char;
                 span.className = 'brand-char';
-                
                 const rx = (Math.random() * 200 - 100) + 'px';
                 const ry = (Math.random() * 200 - 100) + 'px';
                 const rr = (Math.random() * 360 - 180) + 'deg';
-                
                 span.style.setProperty('--rx', rx);
                 span.style.setProperty('--ry', ry);
                 span.style.setProperty('--rr', rr);
@@ -1247,9 +1471,7 @@
         openOrders: () => {
              const phone = localStorage.getItem('rp_user_phone');
              window.app.navTo('orders-screen');
-             
              const list = document.getElementById('order-list-container');
-             
              if(!phone) {
                  list.innerHTML = `
                     <div style="text-align:center; margin-top:50px; color:#777;">
@@ -1259,23 +1481,20 @@
                     </div>`;
                  return;
              }
-
              list.innerHTML = '<div style="text-align:center; margin-top:20px;"><div class="spinner"></div></div>';
-
              db.ref('orders').orderByChild('customerPhone').equalTo(phone).on('value', snapshot => {
                  list.innerHTML = '';
                  const data = snapshot.val();
-                 
                  if(data) {
                      const orders = Object.values(data).reverse(); 
-                     
                      orders.forEach(o => {
                          let statusColor = o.status === 'pending' ? '#f39c12' : (o.status === 'completed' ? 'green' : 'red');
+                         let discountLabel = o.isDiscounted ? '<span style="color:red; font-size:0.7rem; font-weight:bold;">(50% OFF)</span>' : '';
                          
                          const html = `
                          <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
                             <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:8px;">
-                                <span style="font-weight:700; color:#333;">${o.product}</span>
+                                <span style="font-weight:700; color:#333;">${o.product} ${discountLabel}</span>
                                 <span style="color:${statusColor}; font-weight:600; text-transform:uppercase; font-size:0.8rem;">${o.status}</span>
                             </div>
                             <div style="font-size:0.9rem; color:#666;">
@@ -1497,6 +1716,11 @@
             overlay.style.animation = 'curtainExit 1s ease forwards';
             mainApp.style.opacity = '1';
             document.body.style.overflow = 'auto';
+            
+            setTimeout(() => {
+                window.app.checkPromo();
+            }, 1000); 
+
         }, 5000);
     }
 
