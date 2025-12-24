@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অ্যাডমিন প্যানেল - সুপার ফিক্সড (Secure)</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #2c3e50; --secondary: #34495e; --accent: #3498db; --text: #ecf0f1;
+            --bg: #f4f6f9; --danger: #e74c3c; --success: #2ecc71; --warning: #f1c40f; --info: #17a2b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { height: 100vh; background: var(--bg); overflow: hidden; }
+
+        /* Login Page Styles */
+        #login-section {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center;
+        }
+        .login-card h2 { color: var(--primary); margin-bottom: 20px; border-bottom: none; }
+        .login-card input {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd;
+            border-radius: 5px; font-size: 16px;
+        }
+        .login-btn {
+            width: 100%; padding: 12px; background: var(--accent); color: white;
+            border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: 0.3s;
+        }
+        .login-btn:hover { background: #2980b9; }
+
+        /* Admin Interface (Hidden by default) */
+        #admin-interface { display: none; height: 100vh; width: 100%; }
+        
+        /* Layout */
+        .admin-layout { display: flex; height: 100%; width: 100%; }
+        .sidebar { width: 250px; background: var(--primary); color: var(--text); display: flex; flex-direction: column; overflow-y: auto;}
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid var(--secondary); }
+        .menu-item { padding: 15px 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .menu-item:hover, .menu-item.active { background: var(--secondary); border-left: 4px solid var(--accent); }
+        .submenu { display: none; background: #22303f; padding-left: 20px; }
+        .submenu.show { display: block; }
+        .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+        .section { display: none; animation: fadeIn 0.3s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        h2 { margin-bottom: 20px; color: var(--primary); border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 5px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .card h3 { font-size: 2rem; margin: 10px 0; color: var(--primary); }
+        .card p { color: #7f8c8d; font-size: 0.9rem; }
+        .card.money h3 { color: var(--success); }
+        .card.pending h3 { color: var(--warning); }
+        .card.cancel h3 { color: var(--danger); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        textarea.form-control { resize: vertical; height: 100px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-primary { background: var(--accent); }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--warning); color: #333; }
+        .btn-info { background: var(--info); }
+        .btn-outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
+        .btn-outline.active { background: var(--accent); color: white; }
+        .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 5px; }
+        .color-preview { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ccc; display: inline-block; margin-right: 5px; }
+        .upload-box { border: 2px dashed #ccc; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; }
+        .upload-box:hover { border-color: var(--accent); background: #f0f8ff; }
+        .upload-icon { font-size: 40px; color: var(--accent); margin-bottom: 10px; }
+        .preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .preview-wrapper { position: relative; width: 80px; height: 80px; }
+        .preview-item { width: 100%; height: 100%; object-fit: cover; border-radius: 5px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .remove-file { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        th { background: var(--primary); color: white; }
+        img.table-img, video.table-img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        img.order-prod-img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; }
+        .order-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 5px; }
+        .order-product-item { display: flex; gap: 15px; border-bottom: 1px solid #eee; padding: 10px 0; align-items: center; }
+        .loader { display: none; border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; color: white; }
+        .bg-pending { background: var(--warning); color: #333; }
+        .bg-completed, .bg-delivered, .bg-approved { background: var(--success); }
+        .bg-canceled, .bg-rejected { background: var(--danger); }
+        .bg-accepted { background: var(--accent); }
+        .type-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;}
+        .type-auto { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+        .type-drop { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .discount-group { display: flex; gap: 10px; }
+        /* Season Badge Style */
+        .season-badge { background: #6c757d; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; margin-right: 2px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <!-- Login Section -->
+    <div id="login-section">
+        <div class="login-card">
+            <h2><i class="fas fa-lock"></i> অ্যাডমিন লগইন</h2>
+            <input type="email" id="login-email" placeholder="আপনার ইমেইল">
+            <input type="password" id="login-password" placeholder="আপনার পাসওয়ার্ড">
+            <button class="login-btn" onclick="handleLogin()">লগইন করুন</button>
+            <p id="login-error" style="color: red; margin-top: 10px; font-size: 14px; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- Admin Interface (Initially Hidden) -->
+    <div id="admin-interface">
+        <div class="admin-layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Admin Panel</h3>
+                    <small id="admin-user-email" style="color: #bdc3c7; font-size: 12px;"></small>
+                </div>
+                <div class="menu-item active" onclick="showSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড
+                </div>
+                <div class="menu-item" onclick="showSection('add-product')">
+                    <i class="fas fa-plus-circle"></i> অ্যাড প্রডাক্ট
+                </div>
+                <div class="menu-item" onclick="showSection('all-products')">
+                    <i class="fas fa-box"></i> সকল প্রডাক্ট
+                </div>
+                
+                <div class="menu-item" onclick="toggleSubmenu('orders-submenu')">
+                    <i class="fas fa-shopping-cart"></i> অর্ডার মেনু <i class="fas fa-chevron-down" style="margin-left: auto;"></i>
+                </div>
+                <div id="orders-submenu" class="submenu">
+                    <div class="menu-item" onclick="showSection('orders-pending')">পেন্ডিং অর্ডার</div>
+                    <div class="menu-item" onclick="showSection('orders-accepted')">এক্সেপ্ট করা অর্ডার</div>
+                    <div class="menu-item" onclick="showSection('orders-completed')">সম্পন্ন অর্ডার</div>
+                    <div class="menu-item" onclick="showSection('orders-canceled')">ক্যানসেল অর্ডার</div>
+                    <div class="menu-item" onclick="showSection('orders-all')">সকল অর্ডার</div>
+                </div>
+
+                <div class="menu-item" onclick="showSection('withdrawals')">
+                    <i class="fas fa-money-bill-wave"></i> উইথড্র রিকোয়েস্ট
+                </div>
+
+                <div class="menu-item" onclick="showSection('users')">
+                    <i class="fas fa-users"></i> ইউজার লিস্ট
+                </div>
+
+                <div class="menu-item" onclick="handleLogout()" style="margin-top: auto; background: #c0392b;">
+                    <i class="fas fa-sign-out-alt"></i> লগ আউট
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="section active">
+                    <h2>ড্যাশবোর্ড ওভারভিউ</h2>
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <h3 id="dash-total-orders">Loading...</h3>
+                            <p>মোট অর্ডার</p>
+                        </div>
+                        <div class="card money">
+                            <h3 id="dash-total-amount">...</h3>
+                            <p>মোট টাকার অর্ডার</p>
+                        </div>
+                        <div class="card pending">
+                            <h3 id="dash-pending-orders">0</h3>
+                            <p>পেন্ডিং অর্ডার সংখ্যা</p>
+                        </div>
+                        <div class="card pending">
+                            <h3 id="dash-pending-amount">৳0</h3>
+                            <p>পেন্ডিং টাকার পরিমাণ</p>
+                        </div>
+                        <div class="card cancel">
+                            <h3 id="dash-canceled-orders">0</h3>
+                            <p>ক্যানসেল অর্ডার সংখ্যা</p>
+                        </div>
+                        <div class="card cancel">
+                            <h3 id="dash-canceled-amount">৳0</h3>
+                            <p>ক্যানসেল টাকার পরিমাণ</p>
+                        </div>
+                        <div class="card success">
+                            <h3 id="dash-completed-amount">৳0</h3>
+                            <p>সম্পন্ন টাকার পরিমাণ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Product Section -->
+                <div id="add-product" class="section">
+                    <h2>নতুন প্রডাক্ট অ্যাড করুন</h2>
+                    <form id="addProductForm">
+                        <div class="form-group">
+                            <label>প্রডাক্টের নাম</label>
+                            <input type="text" id="p-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>মূল দাম (৳)</label>
+                            <input type="number" id="p-price" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>ডিসকাউন্ট</label>
+                            <div class="discount-group">
+                                <select id="p-discount-type" class="form-control" style="width: 150px;">
+                                    <option value="none">নেই</option>
+                                    <option value="flat">টাকা</option>
+                                    <option value="percent">শতাংশ (%)</option>
+                                </select>
+                                <input type="number" id="p-discount-amount" class="form-control" placeholder="পরিমাণ">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>ক্যাটাগরি</label>
+                            <input type="text" id="p-category" class="form-control" required>
+                        </div>
+
+                        <!-- NEW SEASON FEATURE START -->
+                        <div class="form-group">
+                            <label>সিজন (Season) - <small style="color: #666;">অপশনাল</small></label>
+                            <div class="checkbox-group" style="border:1px solid #ddd; padding:10px; border-radius:5px; background:white;">
+                                <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" name="season" value="Winter"> ❄️ Winter (শীত)
+                                </label>
+                                <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" name="season" value="Summer"> ☀️ Summer (গ্রীষ্ম)
+                                </label>
+                                <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" name="season" value="Rainy"> 🌧️ Rainy (বর্ষা)
+                                </label>
+                            </div>
+                        </div>
+                        <!-- NEW SEASON FEATURE END -->
+
+                        <div class="form-group">
+                            <label>প্রডাক্ট কোড</label>
+                            <input type="text" id="p-code" class="form-control" required readonly style="background-color: #e9ecef; font-weight: bold; color: var(--primary);">
+                        </div>
+                        <div class="form-group">
+                            <label>সর্টিং নাম্বার</label>
+                            <input type="number" id="p-sort" class="form-control" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>ছবি ও ভিডিও আপলোড</label>
+                            <input type="file" id="p-files" class="form-control" multiple accept="image/*,video/*" style="display:none;" onchange="handleFileSelect()">
+                            <div class="upload-box" onclick="document.getElementById('p-files').click()">
+                                <i class="fas fa-plus-circle upload-icon"></i>
+                                <p>ছবি বা ভিডিও যুক্ত করতে এখানে ক্লিক করুন</p>
+                            </div>
+                            <div id="preview-container" class="preview-container"></div>
+                            <div id="upload-status" style="font-size: 12px; color: blue; margin-top:5px;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>বর্ণনা</label>
+                            <textarea id="p-desc" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>সাইজ</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="size" value="M"> M</label>
+                                <label><input type="checkbox" name="size" value="L"> L</label>
+                                <label><input type="checkbox" name="size" value="XL"> XL</label>
+                                <label><input type="checkbox" name="size" value="XXL"> XXL</label>
+                            </div>
+                            <input type="text" id="p-custom-size" class="form-control" placeholder="কাস্টম সাইজ (যেমন: 28, 30, Free Size)" style="margin-top:10px;">
+                        </div>
+                        <div class="form-group">
+                            <label>কালার</label>
+                            <div id="color-container" class="checkbox-group"></div>
+                            <div style="display:flex; gap:10px; margin-top:5px;">
+                                <input type="color" id="color-picker" value="#000000">
+                                <input type="text" id="color-name" placeholder="কালার নাম" class="form-control" style="width:150px;">
+                                <button type="button" class="btn btn-primary" onclick="addColorOption()">অ্যাড</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>সার্চ ট্যাগ</label>
+                            <input type="text" id="p-tags" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-success">প্রডাক্ট পাবলিশ করুন</button>
+                        <div class="loader" id="p-loader"></div>
+                    </form>
+                </div>
+
+                <!-- All Products Section -->
+                <div id="all-products" class="section">
+                    <h2>সকল প্রডাক্ট</h2>
+                    <div class="form-group">
+                        <input type="text" id="search-product-code" class="form-control" placeholder="নাম, কোড বা সিজন (যেমন: Winter) দিয়ে খুঁজুন..." onkeyup="filterProducts()">
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table id="products-table">
+                            <thead><tr><th>ছবি/মিডিয়া</th><th>নাম & সিজন</th><th>কোড</th><th>দাম</th><th>অ্যাকশন</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Orders Sections -->
+                <div id="orders-view" class="section">
+                    <h2 id="order-page-title">অর্ডার লিস্ট</h2>
+                    <div style="overflow-x:auto;">
+                        <table id="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>ছবি</th>
+                                    <th>কোড</th>
+                                    <th>কাস্টমার & ফোন</th>
+                                    <th>মোট টাকা</th>
+                                    <th>স্ট্যাটাস</th>
+                                    <th>পেমেন্ট & TrxID</th>
+                                    <th>তারিখ</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Withdrawal Section -->
+                <div id="withdrawals" class="section">
+                    <h2>উইথড্র রিকোয়েস্ট</h2>
+                    <div style="overflow-x:auto;">
+                        <table id="withdrawals-table">
+                            <thead><tr><th>ইউজার</th><th>পরিমাণ</th><th>মাধ্যম</th><th>নাম্বার</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div id="users" class="section">
+                    <h2>সকল ইউজার</h2>
+                    <div style="margin-bottom: 20px; display:flex; gap:10px;">
+                        <button class="btn btn-outline active" onclick="filterUserList('all', this)">All</button>
+                        <button class="btn btn-outline" onclick="filterUserList('Auto Account', this)">Auto</button>
+                        <button class="btn btn-outline" onclick="filterUserList('Dropshipping Account', this)">Dropshipping</button>
+                    </div>
+                    <table id="users-table">
+                        <thead><tr><th>নাম</th><th>ইমেইল/ফোন</th><th>টাইপ</th><th>অর্ডার</th><th>খরচ</th><th>অ্যাকশন</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('orderModal')">&times;</span>
+            <h3>অর্ডার বিস্তারিত</h3>
+            <div id="order-details-content"></div>
+            <div id="order-actions" style="margin-top:20px; border-top:1px solid #ddd; padding-top:10px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center;"></div>
+        </div>
+    </div>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('userModal')">&times;</span>
+            <h3>ইউজার প্রোফাইল</h3>
+            <div id="user-details-content"></div>
+        </div>
+    </div>
+
+    <div id="editProductModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('editProductModal')">&times;</span>
+            <h3>প্রডাক্ট এডিট করুন</h3>
+            <form id="editProductForm">
+                <input type="hidden" id="ep-id">
+                <div class="form-group"><label>নাম</label><input type="text" id="ep-name" class="form-control"></div>
+                <div class="form-group"><label>দাম</label><input type="number" id="ep-price" class="form-control"></div>
+                <button type="submit" class="btn btn-primary">আপডেট করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-3JLfOb3aAz_eFu6Ko98ogaupUdq1SO4",
+            authDomain: "world123123-975b6.firebaseapp.com",
+            databaseURL: "https://world123123-975b6-default-rtdb.firebaseio.com",
+            projectId: "world123123-975b6",
+            storageBucket: "world123123-975b6.firebasestorage.app",
+            messagingSenderId: "527799677210",
+            appId: "1:527799677210:web:651dfbfa367e6f31b1bca3",
+            measurementId: "G-EBZYCNHCXS"
+        };
+        const cloudName = "dmnyoc0b4"; 
+        const uploadPreset = "Salman32"; 
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth(); 
+        const db = firebase.database();
+        const firestore = firebase.firestore();
+
+        // ==========================================
+        //  AUTHENTICATION LOGIC
+        // ==========================================
+        
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('admin-interface').style.display = 'block';
+                document.getElementById('admin-user-email').innerText = user.email;
+                loadDashboard();
+            } else {
+                document.getElementById('login-section').style.display = 'flex';
+                document.getElementById('admin-interface').style.display = 'none';
+            }
+        });
+
+        function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorMsg = document.getElementById('login-error');
+
+            if(!email || !password) {
+                errorMsg.innerText = "ইমেইল এবং পাসওয়ার্ড দিন";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            errorMsg.style.display = 'none';
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    console.log("Logged in successfully");
+                })
+                .catch((error) => {
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    if(errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found') {
+                        errorMsg.innerText = "ভুল ইমেইল বা পাসওয়ার্ড";
+                    } else {
+                        errorMsg.innerText = errorMessage;
+                    }
+                    errorMsg.style.display = 'block';
+                });
+        }
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                location.reload();
+            }).catch((error) => {
+                alert("Logout Error: " + error.message);
+            });
+        }
+
+
+        // ==========================================
+        //  ADMIN LOGIC
+        // ==========================================
+
+        let universalOrders = new Map();
+        let productMap = new Map();
+        let currentFilterStatus = 'all';
+
+        function getSafeValue(obj, keys, defaultVal = '') {
+            if(!obj) return defaultVal;
+            for (let key of keys) {
+                if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
+            }
+            return defaultVal;
+        }
+
+        function normalizeOrderData(data, id, source) {
+            let trx = getSafeValue(data, ['transactionId', 'trxID', 'trxId', 'bkashTrx', 'nagadTrx', 'txId', 'transaction_id']);
+            let phone = getSafeValue(data, ['customerPhone', 'phone', 'phoneNumber', 'mobile', 'contact']);
+
+            let products = [];
+            if (data.product && typeof data.product === 'string') {
+                products.push({
+                    name: data.product,
+                    image: data.image || data.img || data.productImage || 'https://via.placeholder.com/60',
+                    price: data.price,
+                    qty: data.quantity || data.qty || 1,
+                    code: data.code || data.productCode || 'N/A',
+                    productId: data.productId
+                });
+            } else if (data.products && Array.isArray(data.products)) {
+                products = data.products;
+            } else if (data.cartItems && Array.isArray(data.cartItems)) {
+                products = data.cartItems;
+            }
+
+            products = products.map(p => {
+                if(!p.image && p.img) p.image = p.img;
+                if(!p.image && p.media && p.media.length) p.image = p.media[0];
+                return p;
+            });
+
+            return {
+                id: id,
+                customerName: getSafeValue(data, ['customerName', 'name', 'userName', 'user']),
+                phone: phone, 
+                address: getSafeValue(data, ['address', 'location', 'addr']),
+                totalPrice: getSafeValue(data, ['price', 'totalPrice', 'total', 'amount'], 0),
+                status: getSafeValue(data, ['status'], 'pending').toLowerCase(),
+                paymentMethod: getSafeValue(data, ['paymentMethod', 'method'], 'Cash On Delivery'),
+                trxID: trx, 
+                date: getSafeValue(data, ['date', 'timestamp', 'createdAt']),
+                products: products,
+                source: source
+            };
+        }
+
+        function formatDate(val) {
+            if (!val) return 'N/A';
+            if (val && val.toDate) return val.toDate().toLocaleDateString('bn-BD');
+            const date = new Date(val);
+            return isNaN(date.getTime()) ? (val || 'N/A') : date.toLocaleDateString('bn-BD');
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+
+            if(sectionId.startsWith('orders-')) {
+                document.getElementById('orders-view').classList.add('active');
+                loadOrders(sectionId.replace('orders-', ''));
+            } else {
+                document.getElementById(sectionId).classList.add('active');
+                if(sectionId === 'dashboard') loadDashboard();
+                if(sectionId === 'all-products') loadProducts();
+                if(sectionId === 'users') loadUsers();
+                if(sectionId === 'withdrawals') loadWithdrawals();
+                if(sectionId === 'add-product') generateUniqueProductCode();
+            }
+        }
+        function toggleSubmenu(id) { document.getElementById(id).classList.toggle('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function generateUniqueProductCode() { document.getElementById('p-code').value = 'SF-' + Math.floor(100000 + Math.random() * 900000); }
+
+        // --- UPDATED: LoadProducts to read 'season' as string ---
+        function loadProducts() {
+            db.ref('products').on('value', snap => {
+                const tbody = document.querySelector('#products-table tbody');
+                tbody.innerHTML = '';
+                productMap.clear(); 
+                
+                snap.forEach(c => {
+                    const p = c.val(); 
+                    p.id = c.key;
+                    productMap.set(c.key, p.code);
+
+                    const img = (p.media && p.media.length) ? `<img src="${p.media[0]}" class="table-img">` : 'No Img';
+                    
+                    // FIXED: Season processing to handle STRING
+                    let seasonHtml = '';
+                    let seasonText = '';
+                    
+                    if(p.season) { // Check for 'season' (singular, string)
+                        seasonHtml = '<br>';
+                        const sList = p.season.split(','); // Split string to array
+                        sList.forEach(s => {
+                            seasonHtml += `<span class="season-badge">${s.trim()}</span>`;
+                        });
+                        seasonText = p.season; // For search
+                    }
+
+                    // Prepare search data string (Name + Code + Season)
+                    const searchString = `${p.name} ${p.code} ${seasonText}`.toLowerCase();
+
+                    tbody.innerHTML += `
+                    <tr data-search="${searchString}">
+                        <td>${img}</td>
+                        <td>
+                            ${p.name}
+                            ${seasonHtml}
+                        </td>
+                        <td>${p.code}</td>
+                        <td>৳${p.price}</td>
+                        <td><button class="btn btn-danger" onclick="deleteProduct('${p.id}')">Del</button></td>
+                    </tr>`;
+                });
+                
+                if(universalOrders.size > 0) renderOrdersTable();
+            });
+        }
+        
+        // --- Filter Function ---
+        function filterProducts() {
+            const input = document.getElementById('search-product-code');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('products-table');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) { // Skip header row
+                const searchData = tr[i].getAttribute('data-search');
+                if (searchData && searchData.indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+
+        function deleteProduct(id) { if(confirm("Sure?")) db.ref('products/'+id).remove(); }
+        
+        function loadOrders(filterStatus) {
+            currentFilterStatus = filterStatus;
+            document.getElementById('order-page-title').innerText = filterStatus.toUpperCase() + ' ORDERS';
+            const tbody = document.querySelector('#orders-table tbody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Loading data...</td></tr>';
+            
+            db.ref('orders').on('value', snapshot => {
+                if(snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const order = normalizeOrderData(child.val(), child.key, 'rtdb');
+                        universalOrders.set(child.key, order);
+                    });
+                }
+                renderOrdersTable();
+            });
+
+            firestore.collection('orders').onSnapshot(snapshot => {
+                if(!snapshot.empty) {
+                    snapshot.forEach(doc => {
+                        const order = normalizeOrderData(doc.data(), doc.id, 'firestore');
+                        universalOrders.set(doc.id, order);
+                    });
+                }
+                renderOrdersTable();
+            });
+        }
+
+        function renderOrdersTable() {
+            const tbody = document.querySelector('#orders-table tbody');
+            tbody.innerHTML = '';
+            
+            let count = 0;
+            const sortedOrders = Array.from(universalOrders.values()).sort((a,b) => {
+                const dateA = new Date(a.date).getTime() || 0;
+                const dateB = new Date(b.date).getTime() || 0;
+                return dateB - dateA;
+            });
+
+            sortedOrders.forEach(order => {
+                if (currentFilterStatus !== 'all' && order.status !== currentFilterStatus) return;
+                
+                count++;
+                let statusClass = order.status === 'pending' ? 'bg-pending' : (order.status === 'completed' ? 'bg-completed' : (order.status === 'canceled' ? 'bg-canceled' : 'bg-accepted'));
+                let trxDisplay = order.trxID ? `<br><small style="color:#d35400; font-weight:bold;">Trx: ${order.trxID}</small>` : '';
+                
+                let mainProduct = order.products.length > 0 ? order.products[0] : {};
+                let displayImage = mainProduct.image || 'https://via.placeholder.com/50';
+                
+                let displayCode = mainProduct.code;
+                if((!displayCode || displayCode === 'N/A') && mainProduct.productId) {
+                    displayCode = productMap.get(mainProduct.productId) || 'N/A';
+                }
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><img src="${displayImage}" class="table-img" onerror="this.src='https://via.placeholder.com/50'"></td>
+                    <td><span style="font-weight:bold; color:var(--primary);">${displayCode || 'N/A'}</span><br><small style="color:#999">ID: ${order.id.substring(0,4)}</small></td>
+                    <td><b>${order.customerName}</b><br>${order.phone || '<span style="color:red">No Phone</span>'}</td>
+                    <td>৳${order.totalPrice}</td>
+                    <td><span class="status-badge ${statusClass}">${order.status}</span></td>
+                    <td>${order.paymentMethod}${trxDisplay}</td>
+                    <td>${formatDate(order.date)}</td>
+                    <td><button class="btn btn-warning" onclick="viewOrder('${order.id}')"><i class="fas fa-eye"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if(count === 0) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">কোনো অর্ডার পাওয়া যায়নি</td></tr>';
+            updateDashboardStats(sortedOrders);
+        }
+
+        function updateDashboardStats(orders) {
+            let total = 0, pending = 0, completed = 0, canceled = 0;
+            let pendingAmt = 0, completedAmt = 0, canceledAmt = 0;
+            
+            orders.forEach(o => {
+                let amt = parseFloat(o.totalPrice) || 0;
+                if(o.status !== 'canceled') total += amt;
+                
+                if(o.status === 'pending') { pending++; pendingAmt += amt; }
+                else if(o.status === 'completed') { completed++; completedAmt += amt; }
+                else if(o.status === 'canceled') { canceled++; canceledAmt += amt; }
+            });
+
+            document.getElementById('dash-total-orders').innerText = orders.length;
+            document.getElementById('dash-total-amount').innerText = '৳' + total;
+            document.getElementById('dash-pending-orders').innerText = pending;
+            document.getElementById('dash-pending-amount').innerText = '৳' + pendingAmt;
+            document.getElementById('dash-completed-amount').innerText = '৳' + completedAmt;
+            document.getElementById('dash-canceled-orders').innerText = canceled;
+            document.getElementById('dash-canceled-amount').innerText = '৳' + canceledAmt;
+        }
+
+        function loadDashboard() {
+            loadProducts(); 
+            if(universalOrders.size === 0) loadOrders('all');
+            else renderOrdersTable();
+        }
+
+        function viewOrder(id) {
+            const order = universalOrders.get(id);
+            if(!order) return alert("Error finding order");
+
+            let productHtml = '';
+            order.products.forEach(p => {
+                let img = p.image || 'https://via.placeholder.com/60';
+                
+                let displayCode = p.code;
+                if((!displayCode || displayCode === 'N/A') && p.productId) {
+                    displayCode = productMap.get(p.productId) || 'N/A';
+                }
+
+                productHtml += `
+                    <div class="order-product-item">
+                        <img src="${img}" class="order-prod-img" onerror="this.src='https://via.placeholder.com/60'">
+                        <div style="flex:1;">
+                            <div style="font-weight:bold;">${p.name || 'Product'}</div>
+                            <small>Code: <b style="color:var(--accent)">${displayCode}</b> | Qty: ${p.qty}</small>
+                            <div style="font-weight:bold; color:var(--accent)">৳${p.price}</div>
+                        </div>
+                    </div>`;
+            });
+
+            document.getElementById('order-details-content').innerHTML = `
+                <div class="order-info-grid">
+                    <div><b>Customer:</b> ${order.customerName}<br><b>Phone:</b> ${order.phone}<br><b>Address:</b> ${order.address}</div>
+                    <div style="text-align:right"><b>ID:</b> ${id}<br><b>Date:</b> ${formatDate(order.date)}<br><b>Method:</b> ${order.paymentMethod}<br><b>Trx:</b> ${order.trxID||'N/A'}</div>
+                </div>
+                <div style="background:#fff; border:1px solid #eee; padding:10px;">${productHtml}
+                <div style="text-align:right; margin-top:10px; font-size:1.2rem;">Total: <b>৳${order.totalPrice}</b></div></div>
+            `;
+            
+            let btns = `<button class="btn btn-info" onclick="printInvoice('${id}')">Print</button>`;
+            if(order.status === 'pending') {
+                btns += ` <button class="btn btn-success" onclick="updateStatus('${id}','accepted')">Confirm</button>
+                          <button class="btn btn-danger" onclick="updateStatus('${id}','canceled')">Cancel</button>`;
+            } else if(order.status === 'accepted') {
+                btns += ` <button class="btn btn-success" onclick="updateStatus('${id}','completed')">Complete</button>
+                          <button class="btn btn-danger" onclick="updateStatus('${id}','canceled')">Cancel</button>`;
+            }
+            document.getElementById('order-actions').innerHTML = btns;
+            document.getElementById('orderModal').classList.add('show');
+        }
+
+        function updateStatus(id, status) {
+            if(!confirm("Change status to " + status + "?")) return;
+            const order = universalOrders.get(id);
+            if(order.source === 'rtdb') {
+                db.ref('orders/' + id).update({ status: status });
+            } else {
+                firestore.collection('orders').doc(id).update({ status: status });
+            }
+            closeModal('orderModal');
+        }
+
+        function printInvoice(id) {
+            const order = universalOrders.get(id);
+            const win = window.open('','_blank');
+            let rows = '';
+            order.products.forEach(p => {
+                let code = p.code;
+                if((!code || code==='N/A') && p.productId) code = productMap.get(p.productId) || 'N/A';
+                rows += `<tr><td>${p.name}</td><td>${code}</td><td>${p.qty}</td><td>${p.price}</td><td>${p.price*p.qty}</td></tr>`;
+            });
+            win.document.write(`<html><body><h2>Invoice #${id}</h2><p>To: ${order.customerName}, ${order.phone}</p><table border="1" width="100%"><thead><tr><th>Item</th><th>Code</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table><h3>Total: ${order.totalPrice}</h3><script>window.print()<\/script></body></html>`);
+        }
+        
+        let selectedFiles = [], currentColors = [];
+        function handleFileSelect() { selectedFiles = [...selectedFiles, ...Array.from(document.getElementById('p-files').files)]; renderPreviews(); }
+        function renderPreviews() {
+            const c = document.getElementById('preview-container'); c.innerHTML = '';
+            selectedFiles.forEach((f,i) => {
+                const url = URL.createObjectURL(f);
+                c.innerHTML += `<div class="preview-wrapper"><img src="${url}" class="preview-item"><div class="remove-file" onclick="removeFile(${i})">x</div></div>`;
+            });
+        }
+        function removeFile(i) { selectedFiles.splice(i,1); renderPreviews(); }
+        function addColorOption() {
+            const name = document.getElementById('color-name').value;
+            if(!name) return alert("কালার এর নাম দিন");
+            currentColors.push({name: name, code:document.getElementById('color-picker').value});
+            document.getElementById('color-container').innerHTML = currentColors.map(c=>`<span class="color-preview" style="background:${c.code}"></span>`).join('');
+            document.getElementById('color-name').value = '';
+        }
+        
+        document.getElementById('addProductForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            document.getElementById('p-loader').style.display='block';
+            let media = [];
+            for(let f of selectedFiles) {
+                const fd = new FormData(); fd.append('file', f); fd.append('upload_preset', uploadPreset);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {method:'POST', body:fd});
+                const d = await res.json(); media.push(d.secure_url);
+            }
+            const sizeCheckboxes = document.querySelectorAll('input[name="size"]:checked');
+            let selectedSizes = Array.from(sizeCheckboxes).map(cb => cb.value);
+            const customSize = document.getElementById('p-custom-size').value.trim();
+            if(customSize) {
+                const customSplits = customSize.split(',').map(s => s.trim()).filter(s => s !== '');
+                selectedSizes = [...selectedSizes, ...customSplits];
+            }
+
+            // --- FIXED: Collecting Season Data as comma-separated STRING ---
+            const seasonCheckboxes = document.querySelectorAll('input[name="season"]:checked');
+            const selectedSeasonsArray = Array.from(seasonCheckboxes).map(cb => cb.value);
+            const seasonString = selectedSeasonsArray.join(', '); // Convert Array to "Winter, Summer"
+
+            const p = {
+                name: document.getElementById('p-name').value,
+                price: parseFloat(document.getElementById('p-price').value),
+                code: document.getElementById('p-code').value,
+                media: media,
+                colors: currentColors,
+                sizes: selectedSizes,
+                season: seasonString, // SAVING AS 'season' (String) to match App
+                category: document.getElementById('p-category').value,
+                description: document.getElementById('p-desc').value,
+                discountType: document.getElementById('p-discount-type').value,
+                discountAmount: document.getElementById('p-discount-amount').value,
+                createdAt: Date.now()
+            };
+            
+            if(p.discountType !== 'none' && p.discountAmount) {
+                p.oldPrice = p.price;
+                if(p.discountType === 'flat') p.price = p.oldPrice - parseFloat(p.discountAmount);
+                else if(p.discountType === 'percent') p.price = p.oldPrice - (p.oldPrice * (parseFloat(p.discountAmount)/100));
+                p.price = Math.round(p.price);
+            }
+
+            db.ref('products').push(p);
+            alert("প্রডাক্ট সফলভাবে আপলোড হয়েছে!"); location.reload();
+        });
+
+        function loadWithdrawals() {
+            db.ref('withdrawals').on('value', snap => {
+                const tbody = document.querySelector('#withdrawals-table tbody'); tbody.innerHTML = '';
+                snap.forEach(c => {
+                    const w = c.val();
+                    let btn = w.status === 'pending' ? `<button class="btn btn-success" onclick="db.ref('withdrawals/${c.key}').update({status:'approved'})">Approve</button>` : 'Done';
+                    tbody.innerHTML += `<tr><td>${w.userName}</td><td>${w.amount}</td><td>${w.method}</td><td>${w.number}</td><td>${w.status}</td><td>${btn}</td></tr>`;
+                });
+            });
+        }
+
+        function loadUsers() {
+            db.ref('users').once('value', snap => {
+                const tbody = document.querySelector('#users-table tbody'); tbody.innerHTML = '';
+                snap.forEach(c => {
+                    const u = c.val();
+                    tbody.innerHTML += `<tr><td>${u.name}</td><td>${u.phone||u.email}</td><td>${u.accountType||'Auto'}</td><td>0</td><td>0</td><td><button class="btn btn-primary">Info</button></td></tr>`;
+                });
+            });
+        }
+    </script>
+</body>
+</html>
