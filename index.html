@@ -587,7 +587,7 @@
         </div>
     </div>
 
-    <!-- 6. CHECKOUT FORM -->
+    <!-- 6. CHECKOUT FORM WITH DELIVERY CHARGE -->
     <div id="checkout-screen" class="screen">
         <div onclick="window.app.navTo('product-details-screen')" style="margin-bottom:20px; cursor:pointer;"><i class="fas fa-arrow-left"></i> Checkout Details</div>
         
@@ -595,16 +595,34 @@
             <i class="fas fa-dice"></i> <span id="lucky-msg-text">Lucky Discount Applied!</span>
         </div>
 
+        <!-- Order Summary Box -->
+        <div style="background:white; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between;"><span>Product Price:</span> <span id="summ-prod-price">৳0</span></div>
+            <div style="display:flex; justify-content:space-between; color:#666;"><span>Delivery Charge:</span> <span id="summ-delivery">৳0</span></div>
+            <div style="display:flex; justify-content:space-between; color:green;"><span>Payment Discount:</span> <span id="summ-discount">-৳0</span></div>
+            <div style="border-top:1px solid #eee; margin-top:5px; padding-top:5px; display:flex; justify-content:space-between; font-weight:bold; font-size:1.1rem;">
+                <span>Total Payable:</span> <span id="summ-total" style="color:var(--primary);">৳0</span>
+            </div>
+        </div>
+
         <div style="background:#fffbe6; padding:15px; border-radius:10px; margin-bottom:15px; border:1px dashed #d4af37;">
             <span style="font-size:0.8rem; font-weight:600;">Referral Code (Optional)</span>
             <input type="text" id="co-ref" class="form-control" placeholder="Enter Ref Code" style="margin-bottom:0; margin-top:5px;">
         </div>
+
+        <h4 style="margin-bottom:10px;">Delivery Location <span style="color:red">*</span></h4>
+        <select id="co-location" class="form-control" onchange="window.app.updateCheckoutSummary()" style="background:#f9f9f9; border:2px solid #eee;">
+            <option value="0" disabled selected>Select Location</option>
+            <option value="80">ঢাকার ভিতরে (Inside Dhaka) - ৳80</option>
+            <option value="120">ঢাকার বাইরে (Outside Dhaka) - ৳120</option>
+        </select>
 
         <input type="text" id="co-name" class="form-control" placeholder="Full Name">
         <input type="tel" id="co-phone" class="form-control" placeholder="Phone Number">
         <textarea id="co-address" class="form-control" placeholder="Full Address (House, Road, Area, City)" rows="3"></textarea>
         
         <h4 style="margin:15px 0 10px;">Select Payment Method</h4>
+        <p style="font-size:0.8rem; color:green; margin-bottom:10px;"><i class="fas fa-gift"></i> Pay via bKash/Nagad/Rocket to get <b>30 TK Discount!</b></p>
         
         <input type="hidden" id="co-payment" value="">
 
@@ -780,9 +798,11 @@
     window.currentDsBalance = 0; 
     window.activeGender = 'all'; 
     
-    // --- NEW STATE FOR LUCKY DRAW ---
+    // --- NEW STATE FOR LUCKY DRAW & DELIVERY ---
     window.luckyDiscountPercent = 0; 
     window.currentTotalSpent = 0; 
+    window.deliveryCharge = 0;
+    window.paymentDiscount = 0;
 
     // --- APP LOGIC ---
     window.app = {
@@ -991,6 +1011,46 @@
             } else {
                 document.getElementById('trx-box').style.display = 'block';
             }
+            // Trigger calculation when payment changes
+            window.app.updateCheckoutSummary();
+        },
+
+        updateCheckoutSummary: () => {
+            if(!window.currentProduct) return;
+            
+            // 1. Calculate Base Product Price (After Lucky Discount if any)
+            let originalPrice = parseFloat(window.currentProduct.price);
+            let productPrice = originalPrice;
+            if(window.luckyDiscountPercent > 0 && originalPrice <= 3000) {
+                let discountAmt = (originalPrice * window.luckyDiscountPercent) / 100;
+                productPrice = Math.round(originalPrice - discountAmt);
+            }
+
+            // 2. Get Delivery Charge
+            const locationSelect = document.getElementById('co-location');
+            let delivery = 0;
+            if(locationSelect.value !== "0") {
+                delivery = parseInt(locationSelect.value);
+            }
+            window.deliveryCharge = delivery;
+
+            // 3. Get Payment Method & Apply 30tk Discount logic
+            const method = document.getElementById('co-payment').value;
+            let payDiscount = 0;
+            if(method && method !== 'cod' && delivery > 0) {
+                payDiscount = 30; // 30 TK Discount on Online Payment
+            }
+            window.paymentDiscount = payDiscount;
+
+            // 4. Calculate Total
+            let total = productPrice + delivery - payDiscount;
+
+            // Update UI
+            document.getElementById('summ-prod-price').innerText = '৳' + productPrice;
+            document.getElementById('summ-delivery').innerText = '৳' + delivery;
+            document.getElementById('summ-discount').innerText = '-৳' + payDiscount;
+            document.getElementById('summ-total').innerText = '৳' + total;
+            document.getElementById('pay-amount-hint').innerText = 'Payable: ৳' + total;
         },
 
         fetchBanner: () => {
@@ -1446,15 +1506,18 @@
             if(!window.selectedSize || !window.selectedColor) return alert("Please select Size & Color");
             window.app.checkUserSession();
 
+            // Reset selection values
+            document.getElementById('co-location').value = "0"; 
+            window.deliveryCharge = 0;
+            window.paymentDiscount = 0;
+
             let finalPrice = parseFloat(window.currentProduct.price);
             let luckyMsg = "";
-            let isDiscountApplied = false;
 
             if(window.luckyDiscountPercent > 0) {
                 if(finalPrice > 3000) {
                     alert("Lucky Discount is only applicable for products priced under 3000 Tk.");
                     document.getElementById('discount-active-msg').style.display = 'none';
-                    document.getElementById('pay-amount-hint').innerText = `Payable: ৳${finalPrice}`;
                 } else {
                     let discountAmount = (finalPrice * window.luckyDiscountPercent) / 100;
                     finalPrice = finalPrice - discountAmount;
@@ -1462,13 +1525,13 @@
                     
                     document.getElementById('discount-active-msg').style.display = 'flex';
                     document.getElementById('lucky-msg-text').innerText = `${window.luckyDiscountPercent}% Lucky Discount Applied!`;
-                    document.getElementById('pay-amount-hint').innerText = `Payable: ৳${finalPrice}`;
-                    isDiscountApplied = true;
                 }
             } else {
                 document.getElementById('discount-active-msg').style.display = 'none';
-                document.getElementById('pay-amount-hint').innerText = `Payable: ৳${finalPrice}`;
             }
+            
+            // Initial Summary Update
+            window.app.updateCheckoutSummary();
 
             window.app.navTo('checkout-screen');
         },
@@ -1480,31 +1543,44 @@
             const method = document.getElementById('co-payment').value;
             const trx = document.getElementById('co-trx').value;
             const refCode = document.getElementById('co-ref').value;
+            const locationVal = document.getElementById('co-location').value;
 
             if(!name || !phone || !addr) return alert("Please fill Name, Phone, and Address");
+            if(locationVal === "0") return alert("Please select Delivery Location");
             if(!method) return alert("Please select a payment method");
             
             if(method !== 'cod') {
                 if(!trx || trx.trim() === '') return alert("Please enter Transaction ID for " + method.toUpperCase());
             }
 
+            // Calculation Logic Again for Security
             let originalPrice = parseFloat(window.currentProduct.price);
-            let finalPrice = originalPrice;
-            let discountNote = "";
+            let productPrice = originalPrice;
+            let luckyNote = "";
             let isDiscountOrder = false;
 
             if(window.luckyDiscountPercent > 0 && originalPrice <= 3000) {
                 let discountAmt = (originalPrice * window.luckyDiscountPercent) / 100;
-                finalPrice = Math.round(originalPrice - discountAmt);
-                discountNote = `(${window.luckyDiscountPercent}% Lucky Discount Applied)`;
+                productPrice = Math.round(originalPrice - discountAmt);
+                luckyNote = `(${window.luckyDiscountPercent}% Lucky Discount)`;
                 isDiscountOrder = true;
             }
+
+            let delivery = parseInt(locationVal);
+            let payDiscount = window.paymentDiscount;
+            let finalTotal = productPrice + delivery - payDiscount;
+
+            let locText = (delivery === 80) ? "Inside Dhaka" : "Outside Dhaka";
 
             window.pendingOrder = {
                 product: window.currentProduct.name,
                 productId: window.currentProduct.id,
-                price: finalPrice, 
+                price: productPrice, // Product Price after Lucky Discount
                 originalPrice: window.currentProduct.price,
+                deliveryCharge: delivery,
+                location: locText,
+                paymentDiscountAmount: payDiscount,
+                grandTotal: finalTotal,
                 size: window.selectedSize,
                 color: window.selectedColor,
                 customerName: name,
@@ -1519,14 +1595,18 @@
                 isDropshipOrder: window.isDropshippingMode,
                 isDiscounted: isDiscountOrder,
                 discountPercent: isDiscountOrder ? window.luckyDiscountPercent : 0,
-                adminNote: isDiscountOrder ? `LUCKY DRAW: ${window.luckyDiscountPercent}% OFF` : ""
+                adminNote: (payDiscount > 0 ? "Payment Discount Applied. " : "") + luckyNote
             };
 
             const invoiceHTML = `
                 <div class="inv-row"><span class="inv-label">Product:</span><span class="inv-val">${window.pendingOrder.product}</span></div>
                 <div class="inv-row"><span class="inv-label">Size:</span><span class="inv-val">${window.pendingOrder.size}</span></div>
                 <div class="inv-row"><span class="inv-label">Color:</span><span class="inv-val">${window.pendingOrder.color}</span></div>
-                <div class="inv-row"><span class="inv-label">Price:</span><span class="inv-val">৳${window.pendingOrder.price} <small style="color:red; display:block;">${discountNote}</small></span></div>
+                <div class="inv-row"><span class="inv-label">Price:</span><span class="inv-val">৳${window.pendingOrder.price} <small style="color:red; display:block;">${luckyNote}</small></span></div>
+                <div class="inv-row"><span class="inv-label">Delivery:</span><span class="inv-val">৳${delivery} (${locText})</span></div>
+                <div class="inv-row" style="color:green;"><span class="inv-label" style="color:green;">Discount:</span><span class="inv-val">-৳${payDiscount}</span></div>
+                <div class="inv-row" style="border-top:2px solid #333; margin-top:5px; padding-top:5px;"><span class="inv-label">Total:</span><span class="inv-val" style="font-size:1.2rem; color:var(--primary);">৳${finalTotal}</span></div>
+                
                 <div style="height:10px;"></div>
                 <div class="inv-row"><span class="inv-label">Name:</span><span class="inv-val">${window.pendingOrder.customerName}</span></div>
                 <div class="inv-row"><span class="inv-label">Phone:</span><span class="inv-val">${window.pendingOrder.customerPhone}</span></div>
@@ -1574,6 +1654,8 @@
                 window.isDropshippingMode = false;
                 window.luckyDiscountPercent = 0; 
                 window.pendingOrder = null;
+                window.deliveryCharge = 0;
+                window.paymentDiscount = 0;
             }).catch(e => {
                 document.getElementById('loader').style.display = 'none';
                 alert("Error: " + e.message);
@@ -1650,6 +1732,10 @@
                                 <div style="display:flex; justify-content:space-between;">
                                     <span>Price: ৳${o.price}</span>
                                     <span>${o.paymentMethod.toUpperCase()}</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#555;">
+                                    <span>Delivery: ৳${o.deliveryCharge || 0}</span>
+                                    <span>Total: ৳${o.grandTotal || o.price}</span>
                                 </div>
                                 <div style="margin-top:2px;">Size: ${o.size} | Color: ${o.color}</div>
                                 <div style="font-size:0.8rem; margin-top:8px; color:#999; text-align:right;">${new Date(o.date).toLocaleDateString()}</div>
